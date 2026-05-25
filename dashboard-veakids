@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Vida en Arte Kids — Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --azul:#1B3A6B;--azul-chart:#378ADD;
+  --verde:#1D9E75;--verde-claro:#E1F5EE;
+  --rojo:#E24B4A;--rojo-claro:#FCEBEB;
+  --naranja:#EF9F27;--naranja-claro:#FAEEDA;
+  --gris-claro:#F5F5F3;--borde:#E2E2DE;
+  --texto:#1A1A18;--texto-sec:#6B6B67;--fondo:#F8F7F4;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--fondo);color:var(--texto);padding:1rem;}
+.dashboard{max-width:960px;margin:0 auto;}
+
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:1.25rem;}
+.header-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
+.avatar{width:44px;height:44px;border-radius:50%;background:var(--azul);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:white;flex-shrink:0;}
+.nombre{font-family:'DM Serif Display',serif;font-size:18px;color:var(--azul);line-height:1.2;}
+.meta{font-size:12px;color:var(--texto-sec);margin-top:2px;}
+.periodo-wrap{display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;}
+.logo-text{font-family:'DM Serif Display',serif;font-size:18px;color:var(--azul);letter-spacing:0.5px;white-space:nowrap;text-align:center;}
+.periodo-select{font-size:13px;padding:6px 28px 6px 12px;border-radius:8px;border:1px solid var(--borde);background:white;color:var(--texto);font-family:'DM Sans',sans-serif;cursor:pointer;width:190px;}
+
+.focos-row{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap;}
+.foco-tag{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:500;flex:1;min-width:200px;}
+.foco-tag.f1{background:var(--rojo-claro);color:#7A1F1F;border:1px solid #F7C1C1;}
+.foco-tag.f2{background:var(--naranja-claro);color:#633806;border:1px solid #FAC775;}
+.foco-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+.cards-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:1.25rem;}
+.metric-card{background:white;border:1px solid var(--borde);border-radius:10px;padding:12px 12px 10px;}
+.card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:3px;}
+.dim-label{font-size:11px;color:var(--texto);font-weight:500;line-height:1.2;}
+.foco-pill{font-size:9px;font-weight:600;padding:1px 5px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
+.foco-pill.f1{background:var(--rojo-claro);color:#A32D2D;border:1px solid #F09595;}
+.foco-pill.f2{background:var(--naranja-claro);color:#854F0B;border:1px solid #FAC775;}
+.metric-value{font-family:'DM Serif Display',serif;font-size:26px;color:var(--texto);line-height:1;margin-bottom:3px;}
+.metric-estado{font-size:10px;color:var(--texto-sec);margin-bottom:8px;}
+.metric-estado.vea{color:var(--verde);font-weight:500;}
+.metric-estado.bajo{color:var(--rojo);}
+.pbar-bg{height:4px;background:var(--gris-claro);border-radius:2px;overflow:hidden;}
+.pbar-fill{height:100%;border-radius:2px;}
+
+.charts-wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.chart-card{background:white;border:1px solid var(--borde);border-radius:10px;padding:1rem;}
+.chart-title{font-size:13px;font-weight:500;color:var(--texto);margin-bottom:2px;}
+.chart-sub{font-size:11px;color:var(--texto-sec);margin-bottom:10px;}
+.legend-row{display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--texto-sec);}
+.legend-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.dim-btn{font-size:11px;padding:4px 0;border-radius:20px;border:1px solid var(--borde);background:transparent;color:var(--texto-sec);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;flex:1;text-align:center;min-width:0;}
+.dim-btn.active{background:var(--azul);color:white;border-color:var(--azul);}
+canvas{display:block;width:100% !important;}
+
+@media(max-width:599px){
+  body{padding:0.75rem;}
+  .header{flex-wrap:wrap;}
+  .header-left{flex:1 1 100%;}
+  .periodo-wrap{flex:1 1 100%;flex-direction:row;justify-content:space-between;align-items:center;background:white;border:1px solid var(--borde);border-radius:10px;padding:8px 12px;}
+  .logo-text{font-size:15px;}
+  .periodo-select{font-size:16px;border:none;padding:4px 0;background:transparent;flex:1;margin-left:8px;width:auto;}
+  .cards-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .charts-wrap{grid-template-columns:1fr;}
+  .focos-row{flex-direction:column;}
+  .foco-tag{min-width:0;}
+}
+@media(max-width:380px){
+  .cards-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .nombre{font-size:16px;}
+}
+@media(min-width:600px){
+  body{padding:1.5rem;}
+  .avatar{width:48px;height:48px;font-size:17px;}
+  .nombre{font-size:20px;}
+  .metric-value{font-size:28px;}
+  .dim-label{font-size:12px;}
+}
+@media(min-width:900px){
+  body{padding:2rem;}
+  .nombre{font-size:22px;}
+  .cards-grid{gap:10px;}
+}
+</style>
+</head>
+<body>
+<div class="dashboard">
+  <div class="header">
+    <div class="header-left">
+      <div class="avatar">SA</div>
+      <div>
+        <div class="nombre">Sofía Alvarado</div>
+        <div class="meta">3 años 2 meses · Grupo 3 · Maestra: Ana García</div>
+      </div>
+    </div>
+    <div class="periodo-wrap">
+      <div class="logo-text">VIDA EN ARTE KIDS</div>
+      <select class="periodo-select" id="evalSelect">
+        <option value="0">Evaluación inicial</option>
+        <option value="1">Mes 1 — VEA Kid</option>
+        <option value="2">Mes 2 — VEA Kid</option>
+        <option value="3">Mes 3 — VEA Kid</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="focos-row">
+    <span class="foco-tag f1"><span class="foco-dot" style="background:#E24B4A;"></span>Foco 1: Curiosidad · Meta 90 días: alcanzar percentil 50</span>
+    <span class="foco-tag f2"><span class="foco-dot" style="background:#EF9F27;"></span>Foco 2: Inteligencia emocional · Meta 90 días: alcanzar percentil 50</span>
+  </div>
+
+  <div class="cards-grid" id="cardsGrid"></div>
+
+  <div class="charts-wrap">
+    <div class="chart-card">
+      <div class="chart-title">Perfil de desarrollo</div>
+      <div class="chart-sub">Percentil actual vs. promedio y estándar VEA</div>
+      <div class="legend-row">
+        <span class="legend-item"><span class="legend-dot" style="background:#378ADD;"></span>Sofía</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#C8C7BF;"></span>Promedio (p50)</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#1D9E75;"></span>Estándar VEA</span>
+      </div>
+      <canvas id="radarChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Evolución mensual</div>
+      <div class="chart-sub">Percentil por dimensión a lo largo del tiempo</div>
+      <div class="dim-btns-container" style="margin-bottom:10px;">
+        <div style="display:flex;gap:5px;margin-bottom:5px;">
+          <button class="dim-btn active" data-dim="0">Físico</button>
+          <button class="dim-btn" data-dim="1">Lenguaje</button>
+          <button class="dim-btn" data-dim="2">Cognitivo</button>
+        </div>
+        <div style="display:flex;gap:5px;">
+          <div style="flex:0.5;min-width:0;"></div>
+          <button class="dim-btn" data-dim="3" style="flex:1;">Emocional</button>
+          <button class="dim-btn" data-dim="4" style="flex:1;">Curiosidad</button>
+          <div style="flex:0.5;min-width:0;"></div>
+        </div>
+      </div>
+      <canvas id="lineChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+const dims=["Desarrollo físico","Comunicación y lenguaje","Desarrollo cognitivo","Inteligencia emocional","Curiosidad"];
+const shortDims=["Físico","Lenguaje","Cognitivo","Emocional","Curiosidad"];
+const focos=[4,3];
+const promedio=[50,50,50,50,50];
+const vea=[72,75,70,68,74];
+const meses=["Inicial","Mes 1","Mes 2","Mes 3"];
+const allData=[[42,55,48,32,28],[48,60,52,40,35],[54,65,58,47,44],[62,70,65,55,52]];
+let currentPeriod=0, currentDim=0;
+
+function barColor(i){return i===focos[0]?"#E24B4A":i===focos[1]?"#EF9F27":"#378ADD";}
+function estadoLabel(v){return v>=70?{text:"↑ Estándar VEA",cls:"vea"}:v>=50?{text:"✓ En promedio",cls:""}:{text:"↑ En desarrollo",cls:"bajo"};}
+
+function renderCards(period){
+  const vals=allData[period];
+  const grid=document.getElementById("cardsGrid");grid.innerHTML="";
+  dims.forEach((dim,i)=>{
+    const v=vals[i];const estado=estadoLabel(v);
+    const pill=i===focos[0]?`<span class="foco-pill f1">Foco 1</span>`:i===focos[1]?`<span class="foco-pill f2">Foco 2</span>`:'';
+    grid.innerHTML+=`<div class="metric-card"><div class="card-top"><span class="dim-label">${shortDims[i]}</span>${pill}</div><div class="metric-value">p${v}</div><div class="metric-estado ${estado.cls}">${estado.text}</div><div class="pbar-bg"><div class="pbar-fill" style="width:${v}%;background:${barColor(i)};"></div></div></div>`;
+  });
+}
+
+// ── RADAR (araña) en canvas nativo ──
+function drawRadar(period){
+  const canvas=document.getElementById("radarChart");
+  const parent=canvas.parentElement;
+  const W=parent.clientWidth||300;
+  const H=Math.round(W*0.85);
+  canvas.width=W;canvas.height=H;
+  const cx=W/2,cy=H/2+10,R=Math.min(W,H)*0.36;
+  const ctx=canvas.getContext("2d");
+  ctx.clearRect(0,0,W,H);
+  const n=5;
+  const angles=shortDims.map((_,i)=>-Math.PI/2+(2*Math.PI*i/n));
+
+  // Grids
+  [25,50,75,100].forEach(v=>{
+    const r=R*v/100;
+    ctx.beginPath();
+    angles.forEach((a,i)=>{
+      const x=cx+r*Math.cos(a),y=cy+r*Math.sin(a);
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.closePath();
+    ctx.strokeStyle="rgba(136,135,128,0.18)";ctx.lineWidth=1;ctx.stroke();
+    // label
+    ctx.fillStyle="#B4B2A9";ctx.font="9px DM Sans,sans-serif";ctx.textAlign="center";
+    ctx.fillText(v,cx+2,cy-r+3);
+  });
+
+  // Axis lines
+  angles.forEach(a=>{
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+R*Math.cos(a),cy+R*Math.sin(a));
+    ctx.strokeStyle="rgba(136,135,128,0.18)";ctx.lineWidth=1;ctx.stroke();
+  });
+
+  // Dataset painter
+  function drawDataset(vals,color,fillAlpha){
+    ctx.beginPath();
+    angles.forEach((a,i)=>{
+      const r=R*vals[i]/100;
+      const x=cx+r*Math.cos(a),y=cy+r*Math.sin(a);
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.closePath();
+    ctx.fillStyle=color+(Math.round(fillAlpha*255).toString(16).padStart(2,'0'));
+    ctx.fill();
+    ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.stroke();
+  }
+
+  drawDataset(vea,"#1D9E75",0.06);
+  drawDataset(promedio,"#B4B2A9",0.06);
+  drawDataset(allData[period],"#378ADD",0.12);
+
+  // Points for current data
+  angles.forEach((a,i)=>{
+    const r=R*allData[period][i]/100;
+    const x=cx+r*Math.cos(a),y=cy+r*Math.sin(a);
+    ctx.beginPath();ctx.arc(x,y,4,0,2*Math.PI);
+    ctx.fillStyle="#378ADD";ctx.fill();
+  });
+
+  // Labels
+  ctx.fillStyle="#444441";ctx.font="bold 10px DM Sans,sans-serif";
+  angles.forEach((a,i)=>{
+    const lx=cx+(R+18)*Math.cos(a);
+    const ly=cy+(R+18)*Math.sin(a);
+    ctx.textAlign=lx<cx-5?"right":lx>cx+5?"left":"center";
+    ctx.textBaseline=ly<cy-5?"bottom":ly>cy+5?"top":"middle";
+    ctx.fillText(shortDims[i],lx,ly);
+  });
+}
+
+// ── LINE en canvas nativo ──
+function drawLine(dim){
+  const canvas=document.getElementById("lineChart");
+  const parent=canvas.parentElement;
+  const W=parent.clientWidth||300;
+  const H=200;
+  canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext("2d");
+  ctx.clearRect(0,0,W,H);
+
+  const pad={top:16,right:20,bottom:32,left:32};
+  const cw=W-pad.left-pad.right;
+  const ch=H-pad.top-pad.bottom;
+
+  // Grid Y
+  [0,25,50,75,100].forEach(v=>{
+    const y=pad.top+ch*(1-v/100);
+    ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+cw,y);
+    ctx.strokeStyle="rgba(136,135,128,0.12)";ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle="#B4B2A9";ctx.font="9px DM Sans,sans-serif";
+    ctx.textAlign="right";ctx.textBaseline="middle";
+    ctx.fillText(v,pad.left-5,y);
+  });
+
+  // X labels
+  const n=meses.length;
+  meses.forEach((m,i)=>{
+    const x=pad.left+cw*i/(n-1);
+    ctx.fillStyle="#888780";ctx.font="10px DM Sans,sans-serif";
+    ctx.textAlign="center";ctx.textBaseline="top";
+    ctx.fillText(m,x,H-pad.bottom+6);
+  });
+
+  // Line painter
+  function drawDataLine(vals,color,dash){
+    ctx.beginPath();ctx.setLineDash(dash||[]);ctx.strokeStyle=color;ctx.lineWidth=1.5;
+    vals.forEach((v,i)=>{
+      const x=pad.left+cw*i/(n-1);
+      const y=pad.top+ch*(1-v/100);
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.stroke();ctx.setLineDash([]);
+  }
+
+  // Meta VEA
+  drawDataLine([vea[dim],vea[dim],vea[dim],vea[dim]],"#1D9E75",[3,4]);
+  // Promedio
+  drawDataLine([50,50,50,50],"#C8C7BF",[5,5]);
+
+  // Fill under main line
+  const lc=barColor(dim);
+  const vals=allData.map(d=>d[dim]);
+  ctx.beginPath();
+  vals.forEach((v,i)=>{
+    const x=pad.left+cw*i/(n-1);
+    const y=pad.top+ch*(1-v/100);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.lineTo(pad.left+cw,pad.top+ch);
+  ctx.lineTo(pad.left,pad.top+ch);
+  ctx.closePath();
+  ctx.fillStyle=lc+"22";ctx.fill();
+
+  // Main line
+  drawDataLine(vals,lc);
+
+  // Points
+  vals.forEach((v,i)=>{
+    const x=pad.left+cw*i/(n-1);
+    const y=pad.top+ch*(1-v/100);
+    ctx.beginPath();ctx.arc(x,y,4,0,2*Math.PI);
+    ctx.fillStyle=lc;ctx.fill();
+  });
+}
+
+function update(period){
+  renderCards(period);
+  drawRadar(period);
+  drawLine(currentDim);
+}
+
+document.getElementById("evalSelect").addEventListener("change",function(){
+  currentPeriod=parseInt(this.value);
+  update(currentPeriod);
+});
+
+document.querySelector(".dim-btns-container").addEventListener("click",function(e){
+  const btn=e.target.closest(".dim-btn");if(!btn)return;
+  document.querySelectorAll(".dim-btn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  currentDim=parseInt(btn.dataset.dim);
+  drawLine(currentDim);
+});
+
+// Redibujar al cambiar tamaño
+window.addEventListener("resize",()=>{drawRadar(currentPeriod);drawLine(currentDim);});
+
+// Inicializar
+renderCards(0);
+// Esperar a que el DOM tenga dimensiones
+requestAnimationFrame(()=>{
+  requestAnimationFrame(()=>{
+    drawRadar(0);
+    drawLine(0);
+  });
+});
+</script>
+</body>
+</html>
